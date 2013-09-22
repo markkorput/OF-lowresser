@@ -7,7 +7,7 @@ void testApp::setup() {
     videoPlayer.loadMovie("smalll.mov");
     videoPlayer.setLoopState(OF_LOOP_NORMAL);
     videoPlayer.play();
-    videoPlayer.setPaused(true);
+//    videoPlayer.setPaused(true);
     videoPlayer.setFrame(targetFrame = 0);
     
     
@@ -19,7 +19,11 @@ void testApp::setup() {
     
     ofSetWindowShape(winW, winH);
 
- 
+    // a pixel must be brighter than this to turn into the secondary color (monchormatic display)
+    treshold = 450;
+    
+    ofSetLogLevel(OF_LOG_VERBOSE);
+    
 	//need this for alpha to come through
 //	ofEnableAlphaBlending();
 
@@ -34,7 +38,7 @@ void testApp::setup() {
 
 
 void testApp::update(){
-    videoPlayer.setFrame(targetFrame);
+    if(videoPlayer.isPaused()) videoPlayer.setFrame(targetFrame);
     videoPlayer.update();
 }
 
@@ -52,6 +56,7 @@ void testApp::drawGrid(){
     int gridY = 50;
     gridCellSize = 5;
     gridSpacing = 5;
+    
 
     unsigned char * pixels = videoPlayer.getPixels();
     
@@ -59,9 +64,14 @@ void testApp::drawGrid(){
       for(int px=0; px<videoPlayer.getWidth(); px++){
         int pindex = (py * videoPlayer.getWidth() + px)*3;
 
-        ofSetColor(pixels[pindex],
-                   pixels[pindex+1],
-                   pixels[pindex+2]);    // red, 50% transparent
+          if(pixels[pindex]+pixels[pindex+1]+pixels[pindex+2] > treshold){
+              ofSetColor(0, 0, 255);
+          } else {
+              ofSetColor(255,255,0);
+          }
+//        ofSetColor(pixels[pindex],
+//                   pixels[pindex+1],
+//                   pixels[pindex+2]);    // red, 50% transparent
 
         ofRect(gridX+(gridCellSize+gridSpacing)*px,
                gridY+(gridCellSize+gridSpacing)*py,
@@ -82,19 +92,28 @@ void testApp::mousePressed(int x, int y, int button) {
 //--------------------------------------------------------------
 void testApp::keyPressed  (int key){
     if (key == ' '){
+        videoPlayer.setPaused(!videoPlayer.isPaused());
     }
 
     if (key == OF_KEY_RIGHT){
+        videoPlayer.setPaused(true);
         targetFrame = targetFrame+1;
         
         if(targetFrame >= videoPlayer.getTotalNumFrames()){
             targetFrame = 0;
         }
+        
+        ofLog(OF_LOG_VERBOSE, "Current frame: " + ofToString(targetFrame));
     }
 
     if (key == OF_KEY_LEFT && targetFrame > 0){
+        videoPlayer.setPaused(true);
         targetFrame = targetFrame-1;
+        ofLog(OF_LOG_VERBOSE, "Current frame: " + ofToString(targetFrame));
     }
+    
+    if(key == OF_KEY_DOWN){ treshold--; ofLog(OF_LOG_VERBOSE, "Treshold: " + ofToString(treshold)); }
+    if(key == OF_KEY_UP){ treshold++; ofLog(OF_LOG_VERBOSE, "Treshold: " + ofToString(treshold)); }
 
     if (key == '['){}
 }

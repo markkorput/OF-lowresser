@@ -52,6 +52,6 @@ class testApp : public ofBaseApp{
         // grid
     int gridCellSize;
     int gridSpacing;
-    
+    int treshold;
     void drawGrid();
 };
